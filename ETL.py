@@ -35,15 +35,19 @@ def get_player_log(playerid):
 
 @pipeline.task(depends_on = get_player_log)
 def stream_sql(data):
-    server = 'postgresql+psycopg2://postgres:' + password + '@localhost/NBA'
+    server = 'postgresql://postgres:' + password + '@localhost/NBA'
     engine = sqlalchemy.create_engine(server)
     con = engine.connect()
-    data.to_sql('player_log', con, if_exists = 'append', index = False)
+    data.to_sql(name = 'player_log',con = con, if_exists = 'append', index = False, chunksize = 500, method = 'multi')
     con.close()
 
 @pipeline.task(depends_on = get_player_log)
 def build_csv(data):
-    first_name = full_name.split(' ')[0]
-    last_name = full_name.split(' ')[1]
+    name = full_name.lower()
+    first_name = name.split(' ')[0]
+    last_name = name.split(' ')[1]
     file = first_name + '_' + last_name + '.csv'
     data.to_csv(file, index=False)
+
+pipeline.run()
+print("The player data has successfully been stored!")

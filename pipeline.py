@@ -11,6 +11,8 @@ class DAG:
     def __init__(self):
         self.graph = {}
 
+    # check how many edges are inbound to each node
+    # if a node has 0 in_degrees, then it is a root node
     def in_degrees(self):
         in_degrees = {}
         for node in self.graph:
@@ -22,13 +24,15 @@ class DAG:
                 in_degrees[pointed] += 1
         return in_degrees
 
+    # include a method to create an ordered list of root nodes
     def sort(self):
         in_degrees = self.in_degrees()
+        # create a queue holding the root nodes
         to_visit = deque()
         for node in self.graph:
             if in_degrees[node] == 0:
                 to_visit.append(node)
-
+        # create a list of the nodes ordered by their dependencies
         searched = []
         while to_visit:
             node = to_visit.popleft()
@@ -39,6 +43,7 @@ class DAG:
             searched.append(node)
         return searched
 
+    # create the final method to add nodes to the graph
     def add(self, node, to=None):
         if node not in self.graph:
             self.graph[node] = []
@@ -59,6 +64,7 @@ class Pipeline:
     def __init__(self):
         self.tasks = DAG()
 
+    # allow tasks to have dependencies
     def task(self, depends_on=None):
         def inner(f):
             self.tasks.add(f)
@@ -67,6 +73,7 @@ class Pipeline:
             return f
         return inner
 
+    # create a method to run the pipeline in scheduled order
     def run(self):
         scheduled = self.tasks.sort()
         completed = {}

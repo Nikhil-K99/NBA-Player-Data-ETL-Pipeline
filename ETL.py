@@ -8,10 +8,13 @@ from nba_api.stats.static import players
 from nba_api.stats.endpoints import playergamelog
 from nba_api.stats.library.parameters import SeasonAll
 
+# instantiate the pipeline
 pipeline = Pipeline()
 
+# take in the player desired by the user
 full_name = str(input("Type in the full name of your player: "))
 
+#  retrieve the player id from the NBA API
 @pipeline.task()
 def search_player():
     player_dict = players.get_players()
@@ -22,6 +25,7 @@ def search_player():
     except:
         print("Player not found")
 
+# extract and parse the data from the API using the player id
 @pipeline.task(depends_on=search_player)
 def get_player_log(playerid):
     gamelog_all = playergamelog.PlayerGameLog(player_id = playerid, season = SeasonAll.all)
@@ -32,6 +36,7 @@ def get_player_log(playerid):
     data.drop(columns = drop_cols, inplace=True)
     return data
 
+# ingest the data into the postgreSQL database
 @pipeline.task(depends_on = get_player_log)
 def stream_sql(data):
     server = 'postgresql://postgres:' + password + '@localhost/NBA'
@@ -40,6 +45,7 @@ def stream_sql(data):
     data.to_sql(name = 'player_log',con = con, if_exists = 'append', index = False, chunksize = 500, method = 'multi')
     con.close()
 
+# ingest the player data into a csv file
 @pipeline.task(depends_on = get_player_log)
 def build_csv(data):
     name = full_name.lower()
@@ -48,5 +54,6 @@ def build_csv(data):
     file = first_name + '_' + last_name + '.csv'
     data.to_csv(file, index=False)
 
+# run the pipeline 
 pipeline.run()
 print("The player data has successfully been stored!")

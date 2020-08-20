@@ -11,7 +11,6 @@ from nba_api.stats.library.parameters import SeasonAll
 pipeline = Pipeline()
 
 full_name = str(input("Type in the full name of your player: "))
-full_name = full_name.title()
 
 @pipeline.task()
 def search_player():

@@ -2,7 +2,6 @@ from pipeline import Pipeline
 from secrets import password
 import pandas as pd
 import sqlalchemy
-import psycopg2
 
 from nba_api.stats.static import players
 from nba_api.stats.endpoints import playergamelog
@@ -54,6 +53,6 @@ def build_csv(data):
     file = first_name + '_' + last_name + '.csv'
     data.to_csv(file, index=False)
 
-# run the pipeline 
+# run the pipeline
 pipeline.run()
 print("The player data has successfully been stored!")
